@@ -13,10 +13,10 @@ qt_add_executable(spamfile-gui
     mainwindow.ui
 )
 
-qt_add_translations(
-    TARGETS spamfile-gui
-    TS_FILES spamfile-gui_en_US.ts
-)
+# qt_add_translations(
+#     TARGETS spamfile-gui
+#     TS_FILES spamfile-gui_en_US.ts
+# )
 
 target_link_libraries(spamfile-gui
     PRIVATE
