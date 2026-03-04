@@ -24,6 +24,16 @@ MainWindow::MainWindow(QWidget *parent)
     });
     connect(ui->input_file, &QLineEdit::editingFinished, this, &MainWindow::check_input_path);
     connect(ui->output_folder, &QLineEdit::editingFinished, this, &MainWindow::check_output_path);
+
+    auto update_size_type = [&]{
+        bool is_count = ui->target_count_button->isChecked();
+        ui->target_count->setEnabled(is_count);
+        ui->target_size_number->setDisabled(is_count);
+        ui->target_size_measurement->setDisabled(is_count);
+    };
+    connect(ui->target_count_button, &QRadioButton::toggled, this, update_size_type);
+    connect(ui->target_size_button, &QRadioButton::toggled, this, update_size_type);
+    update_size_type();
 }
 
 bool MainWindow::check_input_path()
