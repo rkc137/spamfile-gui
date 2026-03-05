@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>800</width>
-    <height>600</height>
+    <width>500</width>
+    <height>300</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -24,16 +24,6 @@
        <enum>QFrame::Shadow::Raised</enum>
       </property>
       <layout class="QGridLayout" name="gridLayout_4">
-       <item row="0" column="1">
-        <widget class="QLineEdit" name="input_file"/>
-       </item>
-       <item row="1" column="2">
-        <widget class="QPushButton" name="open_output_folder">
-         <property name="text">
-          <string>Browse</string>
-         </property>
-        </widget>
-       </item>
        <item row="2" column="0" colspan="3">
         <widget class="QFrame" name="frame_2">
          <property name="frameShape">
@@ -43,6 +33,49 @@
           <enum>QFrame::Shadow::Raised</enum>
          </property>
          <layout class="QGridLayout" name="gridLayout_2">
+          <item row="0" column="0">
+           <widget class="QRadioButton" name="target_size_button">
+            <property name="text">
+             <string>target size</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QRadioButton" name="target_count_button">
+            <property name="text">
+             <string>target count</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="5">
+           <spacer name="horizontalSpacer">
+            <property name="orientation">
+             <enum>Qt::Orientation::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item row="1" column="1">
+           <widget class="QSpinBox" name="target_count">
+            <property name="alignment">
+             <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+            </property>
+            <property name="minimum">
+             <number>1</number>
+            </property>
+            <property name="maximum">
+             <number>999999999</number>
+            </property>
+           </widget>
+          </item>
           <item row="0" column="2">
            <widget class="QComboBox" name="target_size_measurement">
             <property name="minimumSize">
@@ -52,7 +85,10 @@
              </size>
             </property>
             <property name="currentText">
-             <string>b</string>
+             <string>gb</string>
+            </property>
+            <property name="currentIndex">
+             <number>3</number>
             </property>
             <item>
              <property name="text">
@@ -76,36 +112,6 @@
             </item>
            </widget>
           </item>
-          <item row="0" column="0">
-           <widget class="QRadioButton" name="target_size_button">
-            <property name="text">
-             <string>target size</string>
-            </property>
-            <property name="checked">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QRadioButton" name="target_count_button">
-            <property name="text">
-             <string>target count</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1">
-           <widget class="QSpinBox" name="target_count">
-            <property name="alignment">
-             <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
-            </property>
-            <property name="minimum">
-             <number>1</number>
-            </property>
-            <property name="maximum">
-             <number>1</number>
-            </property>
-           </widget>
-          </item>
           <item row="0" column="1">
            <widget class="QSpinBox" name="target_size_number">
             <property name="alignment">
@@ -115,31 +121,39 @@
              <number>1</number>
             </property>
             <property name="maximum">
-             <number>1000000011</number>
+             <number>999999999</number>
             </property>
             <property name="value">
              <number>1</number>
             </property>
            </widget>
           </item>
-          <item row="0" column="5">
-           <spacer name="horizontalSpacer">
-            <property name="orientation">
-             <enum>Qt::Orientation::Horizontal</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>40</width>
-              <height>20</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
          </layout>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="label_2">
+         <property name="text">
+          <string>output folder:</string>
+         </property>
         </widget>
        </item>
        <item row="1" column="1">
         <widget class="QLineEdit" name="output_folder"/>
+       </item>
+       <item row="0" column="0">
+        <widget class="QLabel" name="label">
+         <property name="text">
+          <string>input file:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="2">
+        <widget class="QPushButton" name="open_output_folder">
+         <property name="text">
+          <string>Browse</string>
+         </property>
+        </widget>
        </item>
        <item row="0" column="2">
         <widget class="QPushButton" name="open_input_file">
@@ -148,10 +162,29 @@
          </property>
         </widget>
        </item>
-       <item row="1" column="0">
-        <widget class="QLabel" name="label_2">
+       <item row="4" column="0">
+        <widget class="QPushButton" name="pushButton">
          <property name="text">
-          <string>output folder:</string>
+          <string>start</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QLineEdit" name="input_file"/>
+       </item>
+       <item row="4" column="1" colspan="2">
+        <widget class="QProgressBar" name="progressBar">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
+         <property name="value">
+          <number>0</number>
+         </property>
+         <property name="invertedAppearance">
+          <bool>false</bool>
+         </property>
+         <property name="format">
+          <string>%p%   (%v/%m)</string>
          </property>
         </widget>
        </item>
@@ -168,13 +201,6 @@
          </property>
         </spacer>
        </item>
-       <item row="0" column="0">
-        <widget class="QLabel" name="label">
-         <property name="text">
-          <string>input file:</string>
-         </property>
-        </widget>
-       </item>
       </layout>
      </widget>
     </item>
@@ -185,7 +211,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>800</width>
+     <width>500</width>
      <height>25</height>
     </rect>
    </property>
