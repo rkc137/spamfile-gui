@@ -1,9 +1,11 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <QMainWindow>
+#include <fstream>
 #include <limits>
+#include <QMainWindow>
 #include <QFileDialog>
+#include <QMessageBox>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -18,10 +20,13 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
+    static constexpr auto APP_NAME = "Spamfile";
 
 public slots:
+    void spaming();
     bool check_input_path();
     bool check_output_path();
+    void closeEvent(QCloseEvent *event) override;
 
 private:
     QPalette default_palette;
