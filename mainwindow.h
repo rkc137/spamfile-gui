@@ -1,11 +1,15 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <fstream>
-#include <limits>
 #include <QMainWindow>
 #include <QFileDialog>
 #include <QMessageBox>
+
+#include <fstream>
+#include <limits>
+#include <string_view>
+#include <filesystem>
+namespace fs = std::filesystem;
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -23,12 +27,13 @@ public:
     static constexpr auto APP_NAME = "Spamfile";
 
 public slots:
-    void spaming();
     bool check_input_path();
     bool check_output_path();
     void closeEvent(QCloseEvent *event) override;
 
 private:
+    void spaming(uint64_t, fs::path, fs::path) noexcept;
+
     QPalette default_palette;
     QPalette bad_palette;
 

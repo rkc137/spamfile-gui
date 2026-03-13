@@ -37,42 +37,59 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->target_size_button, &QRadioButton::toggled, this, update_size_type);
     update_size_type();
 
-//     connect(ui->start_button, &QPushButton::clicked, this, [&]{
-//         auto is_count = ui->target_count_button->isChecked();
-//         uint64_t file_count = 0;
+    connect(ui->start_button, &QPushButton::clicked, this, [&]{
+        uint64_t file_count = 0;
 
-//         auto file_count =
-//             target_size.value_or(fs::space(target_folder_path).available) /
-//             source_file.size;
+        QString text = tr("file count is ") + QString::number(file_count) + "(" + QString::number();
 
-//         auto total_size = file_count * source_file.size;
-
-//         QString text = tr("file count is ") + QString::number(file_count) + "(" + QString::number();
-//         QMessageBox::StandardButton reply;
-//         reply = QMessageBox::question(this, APP_NAME, tr("Quit?"), QMessageBox::Yes|QMessageBox::No);
-//         if(reply == QMessageBox::Yes)
-//     });
+        QMessageBox::StandardButton reply = QMessageBox::question(
+            this, tr("continue?"), text, QMessageBox::Yes|QMessageBox::No
+        );
+        if(reply == QMessageBox::Yes)
+            spaming(file_count, ui->input_file->text(), ui->output_folder->text());
+    });
 }
 
-void MainWindow::spaming()
+void MainWindow::spaming(uint64_t file_count, fs::path source_file_path, fs::path target_folder_path) noexcept
 {
-    // uint64_t file_count = 0;
-    // for(size_t i = 0; i < file_count; i++)
-    // {
-    //     if(i % 10 == 0)
-    //     {
-    //         auto text = std::to_string(i) + " of " + std::to_string(file_count);
-    //         // ui->progressBar->set
-    //     }
-    //     std::ostringstream oss;
-    //     static auto length_fmt = std::to_string(file_count).size();
-    //     oss << std::setw(length_fmt) << std::setfill('0') << i;
-    //     auto name = source_file.name + oss.str() + source_file.ext;
-    //     if(std::ofstream os{target_folder_path / name, std::ios::binary}; os.is_open())
-    //         os.write(source_file.data.data(), source_file.data.size());
-    //     else
-    //         exit_with_failure("unable to open file " + std::to_string(i));
-    // }
+    struct {
+        std::string name, ext, data;
+        uint64_t size;
+    } source_file;
+
+    if(std::ifstream stream{source_file_path, std::ios::binary}; stream.is_open())
+    {
+        auto s = fs::file_size(source_file_path);
+        source_file.size = s == 0 ? 1 : s;
+        source_file.data.assign(std::istreambuf_iterator<char>{stream}, {});
+        source_file.name = source_file_path.stem().string();
+        source_file.ext = source_file_path.extension().string();
+    }
+    else
+    {
+        std::error_code ec;
+        auto status = fs::status(source_file_path, ec);
+        QMessageBox::critical(this, "Error", QString::fromStdString(ec.message()), QMessageBox::Ok);
+    }
+
+    ui->progressBar->setMaximum(file_count);
+    ui->progressBar->setMinimum(0);
+    auto length_fmt = std::to_string(file_count).size();
+
+    ui->config_frame->setDisabled(true);
+    for(size_t i = 0; i < file_count; i++)
+    {
+        if(i % 10 == 0)
+            ui->progressBar->setValue(i);
+        std::ostringstream oss;
+        oss << std::setw(length_fmt) << std::setfill('0') << i;
+        auto name = source_file.name + oss.str() + source_file.ext;
+        if(std::ofstream os{target_folder_path / name, std::ios::binary}; os.is_open())
+            os.write(source_file.data.data(), source_file.data.size());
+        else
+            QMessageBox::warning(this, tr("Error"), tr("failed to produce"), QMessageBox::Ok);
+    }
+    ui->config_frame->setDisabled(false);
 }
 
 bool MainWindow::check_input_path()
@@ -94,7 +111,10 @@ bool MainWindow::check_output_path()
 void MainWindow::closeEvent(QCloseEvent *event)
 {
     QMessageBox::StandardButton reply;
-    reply = QMessageBox::question(this, APP_NAME, tr("Quit?"), QMessageBox::Yes|QMessageBox::No);
+    reply = QMessageBox::question(
+        this, APP_NAME, tr("Quit?"), QMessageBox::Yes|QMessageBox::No
+    );
+
     if(reply == QMessageBox::Yes)
     {
         QApplication::quit();
