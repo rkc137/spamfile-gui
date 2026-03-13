@@ -10,6 +10,9 @@ MainWindow::MainWindow(QWidget *parent)
     ui->target_size_number->setMaximum(std::numeric_limits<int>::max());
     ui->target_count->setMaximum(std::numeric_limits<int>::max());
 
+    for(int i = 0; i < metaMeasurement.keyCount(); i++)
+        ui->target_size_measurement->addItem(metaMeasurement.key(i), metaMeasurement.value(i));
+
     default_palette = palette();
     bad_palette = default_palette;
     bad_palette.setColor(QPalette::Text, Qt::red);
@@ -38,40 +41,68 @@ MainWindow::MainWindow(QWidget *parent)
     update_size_type();
 
     connect(ui->start_button, &QPushButton::clicked, this, [&]{
-        uint64_t file_count = 0;
+        if(!check_input_path() || !check_output_path())
+        {
+            QMessageBox::warning(
+                this, tr("path error"),
+                tr("input file or output folder is unavailable"),
+                QMessageBox::Ok
+            );
+            return;
+        }
 
-        QString text = tr("file count is ") + QString::number(file_count) + "(" + QString::number();
+        fs::path source_file_path{ui->input_file->text().toStdString()};
+        SourceFile source_file;
+        if(std::ifstream stream{source_file_path, std::ios::binary}; stream.is_open())
+        {
+            auto s = fs::file_size(source_file_path);
+            source_file.size = s == 0 ? 1 : s;
+            source_file.data.assign(std::istreambuf_iterator<char>{stream}, {});
+            source_file.name = source_file_path.stem().string();
+            source_file.ext = source_file_path.extension().string();
+        }
+        else
+        {
+            std::error_code ec;
+            auto status = fs::status(source_file_path, ec);
+            QMessageBox::critical(this, "Error", QString::fromStdString(ec.message()), QMessageBox::Ok);
+            return;
+        }
+
+        size_t available_size = fs::space(fs::path{ui->output_folder->text().toStdString()}).available;
+        size_t target_size = 0;
+        uint64_t file_count = 0;
+        if(ui->maximum_button->isChecked())
+        {
+            file_count = available_size / source_file.size;
+            target_size = file_count * source_file.size;
+        }
+        else if(ui->target_count_button->isChecked())
+        {
+            // TODO: i lost a plot for a moment get back later
+        }
+        else if(ui->target_size_button->isChecked())
+        {
+            // TODO: i lost a plot for a moment get back later
+            // file_count = ui->target_size_number->value() * std::pow(1024, ui->target_size_measurement->currentIndex());
+            // target_size = file_count * source_file.size;
+        }
+        else std::unreachable();
+
+        QString text =
+            tr("file count is ") + QString::number(file_count) +
+            "(" + QString::number(target_size * 1024*1024) + "mb)";
 
         QMessageBox::StandardButton reply = QMessageBox::question(
             this, tr("continue?"), text, QMessageBox::Yes|QMessageBox::No
         );
         if(reply == QMessageBox::Yes)
-            spaming(file_count, ui->input_file->text(), ui->output_folder->text());
+            spaming(file_count, source_file, ui->output_folder->text().toStdString());
     });
 }
 
-void MainWindow::spaming(uint64_t file_count, fs::path source_file_path, fs::path target_folder_path) noexcept
+void MainWindow::spaming(uint64_t file_count, SourceFile &source_file, fs::path target_folder_path)
 {
-    struct {
-        std::string name, ext, data;
-        uint64_t size;
-    } source_file;
-
-    if(std::ifstream stream{source_file_path, std::ios::binary}; stream.is_open())
-    {
-        auto s = fs::file_size(source_file_path);
-        source_file.size = s == 0 ? 1 : s;
-        source_file.data.assign(std::istreambuf_iterator<char>{stream}, {});
-        source_file.name = source_file_path.stem().string();
-        source_file.ext = source_file_path.extension().string();
-    }
-    else
-    {
-        std::error_code ec;
-        auto status = fs::status(source_file_path, ec);
-        QMessageBox::critical(this, "Error", QString::fromStdString(ec.message()), QMessageBox::Ok);
-    }
-
     ui->progressBar->setMaximum(file_count);
     ui->progressBar->setMinimum(0);
     auto length_fmt = std::to_string(file_count).size();
@@ -110,18 +141,11 @@ bool MainWindow::check_output_path()
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
-    QMessageBox::StandardButton reply;
-    reply = QMessageBox::question(
+    auto reply = QMessageBox::question(
         this, APP_NAME, tr("Quit?"), QMessageBox::Yes|QMessageBox::No
     );
-
     if(reply == QMessageBox::Yes)
-    {
         QApplication::quit();
-    }
-    else
-    {
-    }
 }
 
 MainWindow::~MainWindow()

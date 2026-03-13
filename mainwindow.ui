@@ -27,8 +27,14 @@
       <property name="enabled">
        <bool>true</bool>
       </property>
-      <property name="value">
+      <property name="minimum">
        <number>0</number>
+      </property>
+      <property name="maximum">
+       <number>1</number>
+      </property>
+      <property name="value">
+       <number>-1</number>
       </property>
       <property name="invertedAppearance">
        <bool>false</bool>
@@ -102,31 +108,11 @@
              </size>
             </property>
             <property name="currentText">
-             <string>gb</string>
+             <string/>
             </property>
             <property name="currentIndex">
-             <number>3</number>
+             <number>-1</number>
             </property>
-            <item>
-             <property name="text">
-              <string>b</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>kb</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>mb</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>gb</string>
-             </property>
-            </item>
            </widget>
           </item>
           <item row="1" column="1">
@@ -189,7 +175,7 @@
            </spacer>
           </item>
           <item row="2" column="0">
-           <widget class="QRadioButton" name="radioButton">
+           <widget class="QRadioButton" name="maximum_button">
             <property name="text">
              <string>maximum</string>
             </property>

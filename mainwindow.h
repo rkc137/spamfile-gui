@@ -4,10 +4,12 @@
 #include <QMainWindow>
 #include <QFileDialog>
 #include <QMessageBox>
+#include <QMetaEnum>
 
 #include <fstream>
 #include <limits>
 #include <string_view>
+#include <utility>
 #include <filesystem>
 namespace fs = std::filesystem;
 
@@ -32,11 +34,24 @@ public slots:
     void closeEvent(QCloseEvent *event) override;
 
 private:
-    void spaming(uint64_t, fs::path, fs::path) noexcept;
+    struct SourceFile
+    {
+        std::string name, ext, data;
+        uint64_t size;
+    };
+    enum class Measurement
+    {
+        b, kb, mb, gb
+    };
+    Q_ENUM(Measurement)
+    QMetaEnum metaMeasurement = QMetaEnum::fromType<Measurement>();
+
 
     QPalette default_palette;
     QPalette bad_palette;
 
     Ui::MainWindow *ui = nullptr;
+
+    void spaming(uint64_t file_count, SourceFile &source_file, fs::path target_folder_path);
 };
 #endif // MAINWINDOW_H
