@@ -40,93 +40,96 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->target_size_button, &QRadioButton::toggled, this, update_size_type);
     update_size_type();
 
-    connect(ui->start_button, &QPushButton::clicked, this, [&]{
-        if(!check_input_path() || !check_output_path())
+    connect(ui->start_button, &QPushButton::clicked, this, &MainWindow::validating);
+}
+
+void MainWindow::validating()
+{
+    if(!check_input_path() || !check_output_path())
+    {
+        QMessageBox::warning(
+            this, tr("path error"),
+            tr("input file or output folder is unavailable"),
+            QMessageBox::Ok
+        );
+        return;
+    }
+
+    fs::path source_file_path{ui->input_file->text().toStdString()};
+    SourceFile source_file;
+    if(std::ifstream stream{source_file_path, std::ios::binary}; stream.is_open())
+    {
+        auto s = fs::file_size(source_file_path);
+        source_file.size = s == 0 ? 1 : s;
+        source_file.data.assign(std::istreambuf_iterator<char>{stream}, {});
+        source_file.name = source_file_path.stem().string();
+        source_file.ext = source_file_path.extension().string();
+    }
+    else
+    {
+        std::error_code ec;
+        auto status = fs::status(source_file_path, ec);
+        QMessageBox::critical(
+            this,
+            tr("Error"),
+            tr("problem with source file: ") + QString::fromStdString(ec.message()),
+            QMessageBox::Ok
+        );
+        return;
+    }
+
+    size_t available_size = fs::space(ui->output_folder->text().toStdString()).available;
+    size_t target_size = 0;
+    uint64_t file_count = 0;
+    if(ui->maximum_button->isChecked())
+    {
+        file_count = available_size / source_file.size;
+        target_size = available_size;
+    }
+    else if(ui->target_count_button->isChecked())
+    {
+        file_count = ui->target_count->value();
+        target_size = file_count * source_file.size;
+        if(target_size > available_size)
         {
             QMessageBox::warning(
-                this, tr("path error"),
-                tr("input file or output folder is unavailable"),
-                QMessageBox::Ok
-            );
-            return;
-        }
-
-        fs::path source_file_path{ui->input_file->text().toStdString()};
-        SourceFile source_file;
-        if(std::ifstream stream{source_file_path, std::ios::binary}; stream.is_open())
-        {
-            auto s = fs::file_size(source_file_path);
-            source_file.size = s == 0 ? 1 : s;
-            source_file.data.assign(std::istreambuf_iterator<char>{stream}, {});
-            source_file.name = source_file_path.stem().string();
-            source_file.ext = source_file_path.extension().string();
-        }
-        else
-        {
-            std::error_code ec;
-            auto status = fs::status(source_file_path, ec);
-            QMessageBox::critical(
                 this,
                 tr("Error"),
-                tr("problem with source file: ") + QString::fromStdString(ec.message()),
+                tr("too much files, use maximum if still want use that much space"),
                 QMessageBox::Ok
             );
             return;
         }
-
-        size_t available_size = fs::space(ui->output_folder->text().toStdString()).available;
-        size_t target_size = 0;
-        uint64_t file_count = 0;
-        if(ui->maximum_button->isChecked())
+    }
+    else if(ui->target_size_button->isChecked())
+    {
+        // pow and QPow works only with double so shifting instead to not lose information on casts
+        target_size =
+            ui->target_size_number->value() *
+            (size_t(1) << (10 * ui->target_size_measurement->currentIndex()));
+        file_count = target_size / source_file.size;
+        if(target_size > available_size)
         {
-            file_count = available_size / source_file.size;
-            target_size = available_size;
+            QMessageBox::warning(
+                this,
+                tr("Error"),
+                tr("too big size, use maximum if still want use that much space"),
+                QMessageBox::Ok
+            );
+            return;
         }
-        else if(ui->target_count_button->isChecked())
-        {
-            file_count = ui->target_count->value();
-            target_size = file_count * source_file.size;
-            if(target_size > available_size)
-            {
-                QMessageBox::warning(
-                    this,
-                    tr("Error"),
-                    tr("too much files, use maximum if still want use that much space"),
-                    QMessageBox::Ok
-                );
-                return;
-            }
-        }
-        else if(ui->target_size_button->isChecked())
-        {
-            // pow and QPow works only with double so shifting instead to not lose information on casts
-            target_size =
-                ui->target_size_number->value() *
-                (size_t(1) << (10 * ui->target_size_measurement->currentIndex()));
-            file_count = target_size / source_file.size;
-            if(target_size > available_size)
-            {
-                QMessageBox::warning(
-                    this,
-                    tr("Error"),
-                    tr("too big size, use maximum if still want use that much space"),
-                    QMessageBox::Ok
-                );
-                return;
-            }
-        }
-        else std::unreachable();
+    }
+    else std::unreachable();
 
-        QString text =
-            tr("file count is ") + QString::number(file_count) +
-            "(" + QString::number(target_size / (1024*1024)) + "mb)";
+    QString text =
+        tr("file count is ") + QString::number(file_count) +
+        "(" + QString::number(target_size / (1024*1024)) + "mb)";
 
-        QMessageBox::StandardButton reply = QMessageBox::question(
-            this, tr("continue?"), text, QMessageBox::Yes|QMessageBox::No
-        );
-        if(reply == QMessageBox::Yes)
-            spamming(file_count, source_file, ui->output_folder->text().toStdString());
-    });
+    QMessageBox::StandardButton reply = QMessageBox::question(
+        this, tr("continue?"), text, QMessageBox::Yes|QMessageBox::No
+    );
+    if(reply == QMessageBox::Yes)
+        spamming(file_count, source_file, ui->output_folder->text().toStdString());
 }
 
 void MainWindow::spamming(uint64_t file_count, SourceFile &source_file, fs::path target_folder_path)

@@ -6,6 +6,7 @@
 #include <QMessageBox>
 #include <QMetaEnum>
 #include <QtMath>
+#include <QCloseEvent>
 
 #include <fstream>
 #include <limits>
@@ -32,6 +33,7 @@ public:
 public slots:
     bool check_input_path();
     bool check_output_path();
+    void validating();
     void closeEvent(QCloseEvent *event) override;
 
 private:
