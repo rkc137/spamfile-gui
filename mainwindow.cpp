@@ -69,6 +69,7 @@ void MainWindow::validating()
     {
         std::error_code ec;
         auto status = fs::status(source_file_path, ec);
+        Q_UNUSED(status);
         QMessageBox::critical(
             this,
             tr("Error"),
@@ -129,20 +130,37 @@ void MainWindow::validating()
         this, tr("continue?"), text, QMessageBox::Yes|QMessageBox::No
     );
     if(reply == QMessageBox::Yes)
-        spamming(file_count, source_file, ui->output_folder->text().toStdString());
+    {
+        ui->progressBar->setMaximum(file_count);
+        ui->progressBar->setMinimum(0);
+        ui->config_frame->setDisabled(true);
+
+        QtConcurrent::run([=]{
+            spamming(file_count, source_file, ui->output_folder->text().toStdString());
+            QMetaObject::invokeMethod(
+                this,
+                [=]{
+                    ui->progressBar->setValue(file_count);
+                    ui->config_frame->setDisabled(false);
+                },
+                Qt::QueuedConnection
+            );
+        });
+    }
 }
 
-void MainWindow::spamming(uint64_t file_count, SourceFile &source_file, fs::path target_folder_path)
+void MainWindow::spamming(uint64_t file_count, SourceFile source_file, fs::path target_folder_path)
 {
-    ui->progressBar->setMaximum(file_count);
-    ui->progressBar->setMinimum(0);
     auto length_fmt = std::to_string(file_count).size();
-
-    ui->config_frame->setDisabled(true);
+    auto per_div = file_count < 100 ? 1 : file_count / 100;
     for(uint64_t i = 0; i < file_count; i++)
     {
-        if(i % 10 == 0)
-            ui->progressBar->setValue(i);
+        if(i % per_div == 0)
+            QMetaObject::invokeMethod(
+                this, [=]{
+                    ui->progressBar->setValue(i);
+                }, Qt::QueuedConnection
+            );
         std::ostringstream oss;
         oss << std::setw(length_fmt) << std::setfill('0') << i;
         auto name = source_file.name + oss.str() + source_file.ext;
@@ -150,12 +168,14 @@ void MainWindow::spamming(uint64_t file_count, SourceFile &source_file, fs::path
             os.write(source_file.data.data(), source_file.data.size());
         else
         {
-            QMessageBox::warning(this, tr("Error"), tr("failed to produce"), QMessageBox::Ok);
+            QMetaObject::invokeMethod(
+                this, [=]{
+                    QMessageBox::warning(this, tr("Error"), tr("failed to produce"), QMessageBox::Ok);
+                }, Qt::QueuedConnection
+            );
             break;
         }
     }
-    ui->progressBar->setValue(file_count);
-    ui->config_frame->setDisabled(false);
 }
 
 bool MainWindow::check_input_path()

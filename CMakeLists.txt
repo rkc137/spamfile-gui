@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 find_package(Qt6 6.5 REQUIRED COMPONENTS Core Widgets LinguistTools)
+find_package(Qt6 REQUIRED COMPONENTS Concurrent)
 
 qt_standard_project_setup()
 
@@ -26,6 +27,7 @@ target_link_libraries(spamfile-gui
     PRIVATE
         Qt::Core
         Qt::Widgets
+        Qt6::Concurrent
 )
 
 include(GNUInstallDirs)

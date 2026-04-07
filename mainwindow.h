@@ -7,6 +7,7 @@
 #include <QMetaEnum>
 #include <QtMath>
 #include <QCloseEvent>
+#include <QtConcurrent>
 
 #include <fstream>
 #include <limits>
@@ -55,6 +56,6 @@ private:
 
     Ui::MainWindow *ui = nullptr;
 
-    void spamming(uint64_t file_count, SourceFile &source_file, fs::path target_folder_path);
+    void spamming(uint64_t file_count, SourceFile source_file, fs::path target_folder_path);
 };
 #endif // MAINWINDOW_H
